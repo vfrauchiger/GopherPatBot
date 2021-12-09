@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -120,8 +121,8 @@ func authenticatePB() string {
 	return jsonData.AccessToken
 }
 
-func main() {
-	publno := "ep.1000000.B1"
+func getNumberOfPages(publno string) int {
+
 	pageURL := "https://ops.epo.org/rest-services/published-data/publication/docdb/" + publno + "/images"
 
 	token := authenticatePB()
@@ -143,11 +144,11 @@ func main() {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Response Error: ", err)
+		fmt.Println("Response Error Pages: ", err)
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Read Error: ", err)
+		fmt.Println("Read Error Pages: ", err)
 	}
 	resp.Body.Close()
 
@@ -156,4 +157,16 @@ func main() {
 	xml.Unmarshal(data, &xmlResp)
 
 	fmt.Println(xmlResp.DocumentInquiry.InquiryResult.DocumentInstance[0].NumberOfPages)
+
+	numbOfPages, err := strconv.Atoi(xmlResp.DocumentInquiry.InquiryResult.DocumentInstance[0].NumberOfPages)
+	if err != nil {
+		fmt.Println("Conversion Error: ", err)
+	}
+	return numbOfPages
+}
+
+func main() {
+	publno := "ep.1000000.b1"
+	numbOfPages := getNumberOfPages(publno)
+	fmt.Printf("The Publication has %d pages", numbOfPages)
 }
