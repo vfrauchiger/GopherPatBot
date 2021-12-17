@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/cavaliercoder/grab"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 )
@@ -175,31 +174,60 @@ func getNumberOfPages(publno string) int {
 
 var fileNames []string
 
-func main() {
-	publno := "ep.1000000.b1"
+func getOnePublication(publnoSlice []string) {
+	publno := publnoSlice[0] + "." + publnoSlice[1] + "." + publnoSlice[2]
 	numbOfPages := getNumberOfPages(publno)
 	fmt.Printf("The Publication has %d pages\n", numbOfPages)
 
 	for i := 1; i < (numbOfPages + 1); i++ {
-
+		var reader io.Reader
 		urlpdf := "http://ops.epo.org/rest-services/published-data/images/EP/1000000/A1/fullimage.pdf?Range=" + strconv.Itoa(i)
 		//savePath := publno + "_" + strconv.Itoa(i) + ".pdf"
-		client := grab.NewClient()
-		req, _ := grab.NewRequest(".", urlpdf)
+		client := &http.Client{}
 
-		req.HTTPRequest.Header.Add("Authorization", "Bearer "+token)
-
-		resp := client.Do(req)
-		time.Sleep(time.Second)
-		newfilename := publno + "_" + strconv.Itoa(i) + ".pdf"
-		err := os.Rename(resp.Filename, newfilename)
+		req, err := http.NewRequest(
+			"GET",
+			urlpdf,
+			reader,
+		)
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		fmt.Println(newfilename)
-		fileNames = append(fileNames, newfilename)
+		req.Header.Add("Authorization", "Bearer "+token)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		defer resp.Body.Close()
+
+		savePath := publno + "_" + strconv.Itoa(i) + ".pdf"
+		fileNames = append(fileNames, savePath)
+		file, err := os.Create(savePath)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer file.Close()
+
+		_, err = io.Copy(file, resp.Body)
+		if err != nil {
+			fmt.Println(err)
+
+		}
+		file.Close()
+
 	}
 
-	api.MergeAppendFile(fileNames, "rolf.pdf", pdfcpu.NewDefaultConfiguration())
+	api.MergeAppendFile(fileNames, publnoSlice[0]+publnoSlice[1]+publnoSlice[2]+".pdf", pdfcpu.NewDefaultConfiguration())
+	for _, file := range fileNames {
+		os.Remove(file)
+	}
+
+}
+
+func main() {
+	publnoSlice := []string{"EP", "1000000", "A1"}
+	getOnePublication(publnoSlice)
 }
