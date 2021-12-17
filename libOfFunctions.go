@@ -226,8 +226,3 @@ func getOnePublication(publnoSlice []string) {
 	}
 
 }
-
-func main() {
-	publnoSlice := []string{"EP", "1000000", "A1"}
-	getOnePublication(publnoSlice)
-}

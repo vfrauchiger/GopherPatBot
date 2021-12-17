@@ -62,7 +62,7 @@ Seit dem 1. Januar 2004 lautet es WOJJJJNNNNNN (Ländercode, 4 Ziffern für das 
 */
 
 func treatWO(publnoList []string) []string {
-	//modify number
+	//modify number according to comment above....
 
 	if len(publnoList[1]) == 7 {
 		return publnoList
