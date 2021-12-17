@@ -7,12 +7,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/cavaliercoder/grab"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 )
 
 var consKey string = "weOTMHzHLtGFMGyxLorxfCkDyNYGPpUE "
 var consSecKey string = "1GDjAGpvc7nuEeKB"
+
+var token string
 
 type AuthResponse struct {
 	RefreshTokenExpiresIn string   `json:"refresh_token_expires_in"`
@@ -125,7 +133,7 @@ func getNumberOfPages(publno string) int {
 
 	pageURL := "https://ops.epo.org/rest-services/published-data/publication/docdb/" + publno + "/images"
 
-	token := authenticatePB()
+	token = authenticatePB()
 
 	//reqBody := strings.NewReader(publno)
 
@@ -165,8 +173,33 @@ func getNumberOfPages(publno string) int {
 	return numbOfPages
 }
 
+var fileNames []string
+
 func main() {
 	publno := "ep.1000000.b1"
 	numbOfPages := getNumberOfPages(publno)
-	fmt.Printf("The Publication has %d pages", numbOfPages)
+	fmt.Printf("The Publication has %d pages\n", numbOfPages)
+
+	for i := 1; i < (numbOfPages + 1); i++ {
+
+		urlpdf := "http://ops.epo.org/rest-services/published-data/images/EP/1000000/A1/fullimage.pdf?Range=" + strconv.Itoa(i)
+		//savePath := publno + "_" + strconv.Itoa(i) + ".pdf"
+		client := grab.NewClient()
+		req, _ := grab.NewRequest(".", urlpdf)
+
+		req.HTTPRequest.Header.Add("Authorization", "Bearer "+token)
+
+		resp := client.Do(req)
+		time.Sleep(time.Second)
+		newfilename := publno + "_" + strconv.Itoa(i) + ".pdf"
+		err := os.Rename(resp.Filename, newfilename)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println(newfilename)
+		fileNames = append(fileNames, newfilename)
+	}
+
+	api.MergeAppendFile(fileNames, "rolf.pdf", pdfcpu.NewDefaultConfiguration())
 }
