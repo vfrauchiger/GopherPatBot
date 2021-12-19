@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetNumberOfPages(t *testing.T) {
-	publication := "US.9492605.B2"
+	publication := "US.9519121.B2"
 
 	numberOfPages := getNumberOfPages(publication)
 

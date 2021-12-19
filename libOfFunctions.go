@@ -160,16 +160,28 @@ func getNumberOfPages(publno string) int {
 	resp.Body.Close()
 
 	var xmlResp WorldPatentData
-
 	xml.Unmarshal(data, &xmlResp)
 
-	fmt.Println(xmlResp.DocumentInquiry.InquiryResult.DocumentInstance[0].NumberOfPages)
+	//fmt.Println(string(data))
+	if strings.Contains(string(data), "No results found") == true {
+		fmt.Printf("The Publication %s was not found!\n", publno)
+		return 0
+	} else {
+		fmt.Println(len(xmlResp.DocumentInquiry.InquiryResult.DocumentInstance))
+		for index, _ := range xmlResp.DocumentInquiry.InquiryResult.DocumentInstance {
+			if xmlResp.DocumentInquiry.InquiryResult.DocumentInstance[index].Desc == "FullDocument" {
+				numbOfPages, err := strconv.Atoi(xmlResp.DocumentInquiry.InquiryResult.DocumentInstance[index].NumberOfPages)
+				if err != nil {
+					fmt.Println("Conversion Error: ", err)
+				}
+				return numbOfPages
+			} else {
+				continue
+			}
+		}
 
-	numbOfPages, err := strconv.Atoi(xmlResp.DocumentInquiry.InquiryResult.DocumentInstance[0].NumberOfPages)
-	if err != nil {
-		fmt.Println("Conversion Error: ", err)
 	}
-	return numbOfPages
+	return 0
 }
 
 var fileNames []string
@@ -177,6 +189,9 @@ var fileNames []string
 func getOnePublication(publnoSlice []string) {
 	publno := publnoSlice[0] + "." + publnoSlice[1] + "." + publnoSlice[2]
 	numbOfPages := getNumberOfPages(publno)
+	if numbOfPages == 0 {
+		return
+	}
 	fmt.Printf("The Publication has %d pages\n", numbOfPages)
 
 	for i := 1; i < (numbOfPages + 1); i++ {
