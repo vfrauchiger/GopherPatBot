@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 )
 
 var consKey string = "weOTMHzHLtGFMGyxLorxfCkDyNYGPpUE "
@@ -184,9 +182,9 @@ func getNumberOfPages(publno string) int {
 	return 0
 }
 
-var fileNames []string
-
 func getOnePublication(publnoSlice []string) {
+	var fileNames []string
+
 	publno := publnoSlice[0] + "." + publnoSlice[1] + "." + publnoSlice[2]
 	numbOfPages := getNumberOfPages(publno)
 	if numbOfPages == 0 {
@@ -196,7 +194,7 @@ func getOnePublication(publnoSlice []string) {
 
 	for i := 1; i < (numbOfPages + 1); i++ {
 		var reader io.Reader
-		urlpdf := "http://ops.epo.org/rest-services/published-data/images/EP/1000000/A1/fullimage.pdf?Range=" + strconv.Itoa(i)
+		urlpdf := "http://ops.epo.org/rest-services/published-data/images/" + publnoSlice[0] + "/" + publnoSlice[1] + "/" + publnoSlice[2] + "/fullimage.pdf?Range=" + strconv.Itoa(i)
 		//savePath := publno + "_" + strconv.Itoa(i) + ".pdf"
 		client := &http.Client{}
 
@@ -218,26 +216,31 @@ func getOnePublication(publnoSlice []string) {
 
 		defer resp.Body.Close()
 
-		savePath := publno + "_" + strconv.Itoa(i) + ".pdf"
+		savePath := "./" + publnoSlice[0] + publnoSlice[1] + publnoSlice[2] + "_" + strconv.Itoa(i) + ".pdf"
 		fileNames = append(fileNames, savePath)
 		file, err := os.Create(savePath)
 		if err != nil {
 			fmt.Println(err)
 		}
-		defer file.Close()
+		//defer file.Close()
 
-		_, err = io.Copy(file, resp.Body)
+		pages, err := io.Copy(file, resp.Body)
 		if err != nil {
 			fmt.Println(err)
-
 		}
+		fmt.Println(pages)
 		file.Close()
+		fmt.Println(savePath)
 
 	}
 
-	api.MergeAppendFile(fileNames, publnoSlice[0]+publnoSlice[1]+publnoSlice[2]+".pdf", pdfcpu.NewDefaultConfiguration())
-	for _, file := range fileNames {
-		os.Remove(file)
+	err := api.MergeCreateFile(fileNames, "./"+publnoSlice[0]+publnoSlice[1]+publnoSlice[2]+".pdf", nil)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for _, file := range fileNames {
+			os.Remove(file)
+		}
 	}
 
 }

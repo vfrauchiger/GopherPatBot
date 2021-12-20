@@ -54,7 +54,7 @@ func main() {
 		labFinishedTask.SetText("Running!")
 		for _, publno := range publList {
 			publnoList := numberIngestion(publno)
-			getOnePublication(publnoList)
+			go getOnePublication(publnoList)
 		}
 
 		labFinishedTask.SetText("All Done!")
