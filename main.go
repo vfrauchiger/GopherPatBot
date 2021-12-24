@@ -54,6 +54,7 @@ func main() {
 		labFinishedTask.SetText("Running!")
 		for _, publno := range publList {
 			publnoList := numberIngestion(publno)
+			// for every document in the list a new go routine is started
 			go getOnePublication(publnoList)
 		}
 
