@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
-var consKey string = "weOTMHzHLtGFMGyxLorxfCkDyNYGPpUE "
-var consSecKey string = "1GDjAGpvc7nuEeKB"
+// In orde to get the code working you will have to obtain application keys from the European Patent Office
+var consKey string = ""    // add OPS Key here
+var consSecKey string = "" // add OPS Secret here
 
 var token string
 
